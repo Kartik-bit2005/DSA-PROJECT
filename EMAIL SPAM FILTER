@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_EMAIL_LENGTH 1024
+#define MAX_KEYWORDS 10
+#define SPAM_THRESHOLD 3
+const char *spam_keywords[MAX_KEYWORDS] = {
+    "free", "offer", "buy", "prize", "winner", "discount", "claim", "limited", "exclusive", "promotion"
+};
+void to_lowercase(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = tolower(str[i]);
+    }
+}
+int is_spam_word(const char *word) {
+    for (int i = 0; i < MAX_KEYWORDS; i++) {
+        if (strcmp(word, spam_keywords[i]) == 0) {
+            return 1;  // Word matches a spam keyword
+        }
+    }
+    return 0; 
+}
+
+
+int classify_email(const char *email_text) {
+    char email_copy[MAX_EMAIL_LENGTH];
+    strcpy(email_copy, email_text);
+    to_lowercase(email_copy); 
+
+    char *token = strtok(email_copy, " \t\n");
+    int spam_count = 0;
+
+   
+    while (token != NULL) {
+        if (is_spam_word(token)) {
+            spam_count++;
+        }
+        token = strtok(NULL, " \t\n");
+    }
+    return spam_count >= SPAM_THRESHOLD ? 1 : 0;  
+
+int main() {
+    FILE *file = fopen("emails.txt", "r"); 
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return 1;
+    }
+    char email[MAX_EMAIL_LENGTH];
+    while (fgets(email, sizeof(email), file)) {
+        char *label = strtok(email, " \t\n");
+        char *email_content = strtok(NULL, "\n");
+
+        if (email_content == NULL) {
+            continue;  
+        }
+        int is_spam = classify_email(email_content);
+        printf("Email: %s\n", email_content);
+        printf("True Label: %s\n", label);
+        printf("Classified as: %s\n", is_spam ? "Spam" : "Not Spam");
+        printf("\n");
+    }
+    fclose(file); 
+    return 0;
+}
